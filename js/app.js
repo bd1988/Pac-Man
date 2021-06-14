@@ -112,9 +112,9 @@ document.addEventListener('DOMContentLoaded', () => {
           squares[pacmanCurrentIndex].classList.add('pac-man');
 
           pacDotEaten()
-          //powerPelletEaten()
-          //checkForGameOver()
-          //CheckForWin()
+          powerPelletEaten()
+          checkGameOver()
+          CheckForWin()
       }
 
       document.addEventListener('keyup', movePacman);
@@ -128,6 +128,21 @@ document.addEventListener('DOMContentLoaded', () => {
           }
       }
 
+      //what happens when pac-man eats power pellet
+      function powerPelletEaten() {
+          if(squares[pacmanCurrentIndex].classList.contains('power-pellet')) {
+              score += 10;
+              ghosts.forEach(ghost => ghost.isScared = true);
+              setTimeout(unScaredGhosts, 10000);
+              squares[pacmanCurrentIndex].classList.remove('power-pellet');
+          }
+      }
+
+      //make the ghosts stop appearing as aquamarine
+      function unScaredGhosts() {
+          ghosts.forEach(ghost => ghost.isScared = false);
+      }
+
       //create Ghos template
       class Ghost {
           constructor(className, startIndex, speed) {
@@ -136,6 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
               this.speed = speed;
               this.currentIndex = startIndex;
               this.timerId = NaN;
+              this.isScared = false;
           }
       }
 
@@ -173,7 +189,39 @@ document.addEventListener('DOMContentLoaded', () => {
                 //else find a new direction to try
             } else direction = directions[Math.floor(Math.random() * directions.length)]
             
+            //if the ghost is currently scared
+            if(ghost.isScared) {
+                squares[ghost.currentIndex].classList.add('scared-ghost')
+            };
+
+            //if the ghost is scared and the pacman runs into it
+            if(ghost.isScared && squares[ghost.currentIndex].classList.contains('pac-man')) {
+                squares[ghost.currentIndex].classList.remove(ghost.className, 'ghost', 'scared-ghost');
+                ghost.currentIndex = ghost.startIndex;
+                score += 100;
+                squares[ghost.currentIndex].classList.add(ghost.className, 'ghost')
+            }
+
+            checkGameOver();
 
           }, ghost.speed)
+      }
+
+      //check for a game over
+      function checkGameOver() {
+          if(squares[pacmanCurrentIndex].classList.contains('ghost') && !squares[pacmanCurrentIndex].classList.contains('scared-ghost')) {
+              ghosts.forEach(ghost => clearInterval(ghost.timerId));
+              document.removeEventListener('keyup', movePacman);
+              setTimeout(function(){alert('Game Over!')}, 500);
+          }
+      }
+
+      //check for a win
+      function CheckForWin() {
+          if(score === 274) {
+              ghosts.forEach(ghost => clearInterval(ghost.timerId));
+              document.removeEventListener('keyup', movePacman);
+              scoreDisplay.innerHTML = 'YOU WON!';
+          }
       }
 })
